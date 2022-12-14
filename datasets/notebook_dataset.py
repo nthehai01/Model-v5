@@ -69,8 +69,8 @@ class NotebookDataset(Dataset):
 
     def __getitem__(self, index):
         nb_id = self.df_id[index]
-        n_code_cells = self.nb_meta_data[nb_id]['n_code_cells']
-        n_md_cells = self.nb_meta_data[nb_id]['n_md_cells']
+        n_code_cells = self.nb_meta_data[[nb_id]]['n_code_cells']
+        n_md_cells = self.nb_meta_data[[nb_id]]['n_md_cells']
         
         df_code_cell = self.df_code_cell.loc[nb_id].copy()
         df_code_cell = df_code_cell.to_frame().T if df_code_cell.shape[0] == 1 else df_code_cell
