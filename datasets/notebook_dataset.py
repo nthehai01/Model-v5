@@ -77,6 +77,14 @@ class NotebookDataset(Dataset):
         df_md_cell = self.df_md_cell.loc[nb_id].copy()
         df_md_cell = df_md_cell.to_frame().T if df_md_cell.shape[0] == 1 else df_md_cell
 
+        import pandas as pd
+        if type(df_code_cell) != pd.core.frame.DataFrame:
+            print(df_code_cell.shape)
+
+        if type(df_md_cell) != pd.core.frame.DataFrame:
+            print(df_md_cell.shape)
+
+
         if self.is_train:
             # code cells
             n_code_cell_pads = int(max(0, self.max_n_code_cells - n_code_cells))
