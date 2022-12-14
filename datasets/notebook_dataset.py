@@ -43,9 +43,13 @@ class NotebookDataset(Dataset):
 
 
     def _encode_texts(self, df_cell, n_pads, tokenizer):
-        print("-"*10)
-        print(n_pads)
-        print(len(df_cell['source']))
+        
+        if type(df_cell['source']) == str:
+            print("-"*10)
+            print(n_pads)
+            print(len(df_cell['source']))
+            print(df_cell['source'])
+
 
         # texts = (
         #     ['starting' + tokenizer.sep_token] +
