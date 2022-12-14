@@ -74,17 +74,11 @@ class NotebookDataset(Dataset):
         n_md_cells = self.nb_meta_data[nb_id]['n_md_cells']
         
         df_code_cell = self.df_code_cell.loc[nb_id].copy()
-        df_code_cell = df_code_cell.to_frame().T if type(df_code_cell) == pd.core.series.Series else df_code_cell
+        df_code_cell = df_code_cell.to_frame().T \
+            if type(df_code_cell) == pd.core.series.Series else df_code_cell
         df_md_cell = self.df_md_cell.loc[nb_id].copy()
-        df_md_cell = df_md_cell.to_frame().T if type(df_md_cell) == pd.core.series.Series else df_md_cell
-
-        
-        if type(df_code_cell) != pd.core.frame.DataFrame:
-            print(df_code_cell.shape)
-
-        if type(df_md_cell) != pd.core.frame.DataFrame:
-            print(df_md_cell.shape)
-
+        df_md_cell = df_md_cell.to_frame().T \
+            if type(df_md_cell) == pd.core.series.Series else df_md_cell
 
         if self.is_train:
             # code cells

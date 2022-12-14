@@ -79,9 +79,13 @@ def train_one_epoch(model,
             metrics['diff_lr'] = metrics['next_lr'] - metrics['prev_lr']
             wandb.log(metrics)
 
+            # pbar.set_postfix(
+            #     point_loss=metrics['point_loss'], 
+            #     lr=lr_to_4sf(scheduler.get_last_lr())
+            # )
             pbar.set_postfix(
-                point_loss=metrics['point_loss'], 
-                lr=lr_to_4sf(scheduler.get_last_lr())
+                loss=metrics['point_loss'], 
+                lr=scheduler.get_last_lr()[0]
             )
 
         if scheduler.get_last_lr()[0] == 0:
@@ -169,8 +173,8 @@ def train(model, train_loader, val_loader, args):
             args
         )
 
-        if scheduler.get_last_lr()[0] == 0:
-            break
+        # if scheduler.get_last_lr()[0] == 0:
+        #     break
 
 
 def parse_args():
@@ -190,7 +194,7 @@ def parse_args():
     parser.add_argument('--preprocess_data', action="store_true")
     parser.add_argument('--no-preprocess_data', action="store_false")
     parser.set_defaults(feature=True)
-    parser.add_argument('--train_size', type=int, default=0.001)
+    parser.add_argument('--train_size', type=int, default=0.01)
     parser.add_argument('--val_size', type=int, default=0.1)
 
     parser.add_argument('--batch_size', type=int, default=1)
