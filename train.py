@@ -89,6 +89,7 @@ def train_one_epoch(model,
             )
 
         if scheduler.get_last_lr()[0] == 0:
+            print("* Learning rate = 0. Early stopping at epoch", epoch)
             break
 
     state_dicts.update({
@@ -173,8 +174,8 @@ def train(model, train_loader, val_loader, args):
             args
         )
 
-        # if scheduler.get_last_lr()[0] == 0:
-        #     break
+        if scheduler.get_last_lr()[0] == 0:
+            break
 
 
 def parse_args():
