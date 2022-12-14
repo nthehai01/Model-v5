@@ -43,22 +43,12 @@ class NotebookDataset(Dataset):
 
 
     def _encode_texts(self, df_cell, n_pads, tokenizer):
-        if type(df_cell['source']) == str:  # if only one cell
-            texts = (
-                ['starting' + tokenizer.sep_token] +
-                [df_cell['source']] + 
-                ['ending' + tokenizer.sep_token] +
-                n_pads * ['padding' + tokenizer.sep_token]
-            )  # len = max_n_cells + 2
-            print('+'*10)
-            print(len(texts))
-        else:
-            texts = (
-                ['starting' + tokenizer.sep_token] +
-                df_cell['source'].tolist() + 
-                ['ending' + tokenizer.sep_token] +
-                n_pads * ['padding' + tokenizer.sep_token]
-            )  # len = max_n_cells + 2
+        texts = (
+            ['starting' + tokenizer.sep_token] +
+            df_cell['source'].tolist() + 
+            ['ending' + tokenizer.sep_token] +
+            n_pads * ['padding' + tokenizer.sep_token]
+        )  # len = max_n_cells + 2
 
         inputs = tokenizer.batch_encode_plus(
             texts,
@@ -81,8 +71,11 @@ class NotebookDataset(Dataset):
         nb_id = self.df_id[index]
         n_code_cells = self.nb_meta_data[nb_id]['n_code_cells']
         n_md_cells = self.nb_meta_data[nb_id]['n_md_cells']
+        
         df_code_cell = self.df_code_cell.loc[nb_id].copy()
+        df_code_cell = df_code_cell.to_frame().T if df_code_cell.shape[0] == 1 else df_code_cell
         df_md_cell = self.df_md_cell.loc[nb_id].copy()
+        df_md_cell = df_md_cell.to_frame().T if df_md_cell.shape[0] == 1 else df_md_cell
 
         if self.is_train:
             # code cells
