@@ -48,7 +48,7 @@ class NotebookDataset(Dataset):
             print("-"*10)
             print(n_pads)
             print(len(df_cell['source']))
-            print(df_cell['source'])
+            print(df_cell)
 
 
         # texts = (
