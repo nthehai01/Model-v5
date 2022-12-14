@@ -47,10 +47,14 @@ class NotebookDataset(Dataset):
         print(n_pads)
         print(len(df_cell['source']))
 
+        # texts = (
+        #     ['starting' + tokenizer.sep_token] +
+        #     df_cell['source'].tolist() + 
+        #     ['ending' + tokenizer.sep_token] +
+        #     n_pads * ['padding' + tokenizer.sep_token]
+        # )  # len = max_n_cells + 2
         texts = (
-            ['starting' + tokenizer.sep_token] +
             df_cell['source'].tolist() + 
-            ['ending' + tokenizer.sep_token] +
             n_pads * ['padding' + tokenizer.sep_token]
         )  # len = max_n_cells + 2
         
