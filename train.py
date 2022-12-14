@@ -187,13 +187,15 @@ def parse_args():
     parser.add_argument('--max_len', type=int, default=64)
     parser.add_argument('--ellipses_token_id', type=int, default=734)
 
-    parser.add_argument('--preprocess_data', default=False, action=argparse.BooleanOptionalAction)
-    parser.add_argument('--train_size', type=int, default=0.0001)
+    parser.add_argument('--preprocess_data', action="store_true")
+    parser.add_argument('--no-preprocess_data', action="store_false")
+    parser.set_defaults(feature=True)
+    parser.add_argument('--train_size', type=int, default=0.001)
     parser.add_argument('--val_size', type=int, default=0.1)
 
     parser.add_argument('--batch_size', type=int, default=1)
     parser.add_argument('--n_workers', type=int, default=1)
-    parser.add_argument('--epochs', type=int, default=2)
+    parser.add_argument('--epochs', type=int, default=1)
     parser.add_argument('--accumulation_steps', type=int, default=8)
     parser.add_argument('--lr', type=float, default=3e-5)
 
