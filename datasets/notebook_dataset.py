@@ -43,6 +43,7 @@ class NotebookDataset(Dataset):
 
 
     def _encode_texts(self, df_cell, n_pads, tokenizer):
+        print(df_cell['source'])
         texts = (
             ['starting' + tokenizer.sep_token] +
             df_cell['source'].tolist() + 
