@@ -37,7 +37,7 @@ class Attention(nn.Module):
         
     def forward(self, keys, masks):
         weights = self.v(torch.tanh(self.W(keys)))
-        weights.masked_fill_(masks.unsqueeze(-1), -6.5e4)
+        weights.masked_fill_(masks.unsqueeze(-1).bool(), -6.5e4)
         weights = F.softmax(weights, dim=2)
         return torch.sum(weights * keys, dim=2)
 
