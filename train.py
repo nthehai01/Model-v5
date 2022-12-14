@@ -192,10 +192,14 @@ def parse_args():
     parser.add_argument('--max_len', type=int, default=64)
     parser.add_argument('--ellipses_token_id', type=int, default=734)
 
+    parser.add_argument('--freeze_pretrained', action="store_true")
+    parser.add_argument('--no-freeze_pretrained', action="store_false", dest='freeze_pretrained')
+    parser.set_defaults(freeze_pretrained=True)
+
     parser.add_argument('--preprocess_data', action="store_true")
-    parser.add_argument('--no-preprocess_data', action="store_false")
-    parser.set_defaults(feature=True)
-    parser.add_argument('--train_size', type=float, default=0.01)
+    parser.add_argument('--no-preprocess_data', action="store_false", dest='preprocess_data')
+    parser.set_defaults(preprocess_data=True)
+    parser.add_argument('--train_size', type=float, default=0.0001)
     parser.add_argument('--val_size', type=float, default=0.1)
 
     parser.add_argument('--batch_size', type=int, default=1)
@@ -257,6 +261,14 @@ if __name__ == '__main__':
             args.n_layers
         )
         model.to(args.device)
+
+        if args.freeze_pretrained:
+            print("Freezing pretrained models...")
+            for param in model.code_encoder.parameters():
+                param.requires_grad = False
+            for param in model.md_encoder.parameters():
+                param.requires_grad = False
+            print("="*50)
             
         wandb.watch(model, log_freq=10000, log_graph=True, log="all")
 
