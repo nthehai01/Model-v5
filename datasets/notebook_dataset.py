@@ -43,19 +43,22 @@ class NotebookDataset(Dataset):
 
 
     def _encode_texts(self, df_cell, n_pads, tokenizer):
-        if type(df_cell['source']) == str:
-            df_cell['source'] = [df_cell['source']]
-            print("-"*10)
-            print(n_pads)
-            print(len(df_cell))
-            print(type(df_cell['source']))
-
-        texts = (
-            ['starting' + tokenizer.sep_token] +
-            df_cell['source'].tolist() + 
-            ['ending' + tokenizer.sep_token] +
-            n_pads * ['padding' + tokenizer.sep_token]
-        )  # len = max_n_cells + 2
+        if type(df_cell['source']) == str:  # if only one cell
+            texts = (
+                ['starting' + tokenizer.sep_token] +
+                [df_cell['source']] + 
+                ['ending' + tokenizer.sep_token] +
+                n_pads * ['padding' + tokenizer.sep_token]
+            )  # len = max_n_cells + 2
+            print('+'*10)
+            print(len(texts))
+        else:
+            texts = (
+                ['starting' + tokenizer.sep_token] +
+                df_cell['source'].tolist() + 
+                ['ending' + tokenizer.sep_token] +
+                n_pads * ['padding' + tokenizer.sep_token]
+            )  # len = max_n_cells + 2
 
         inputs = tokenizer.batch_encode_plus(
             texts,
