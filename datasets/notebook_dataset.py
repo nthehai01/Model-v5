@@ -47,7 +47,7 @@ class NotebookDataset(Dataset):
         if type(df_cell['source']) == str:
             print("-"*10)
             print(n_pads)
-            print(len(df_cell['source']))
+            print(len(df_cell))
             print(df_cell)
 
 
