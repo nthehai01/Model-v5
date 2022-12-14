@@ -23,6 +23,14 @@ warnings.filterwarnings("ignore")
 SEED = int(os.environ['SEED'])
 
 
+def load_checkpoint(model, optimizer, scheduler, checkpoint_path):
+    checkpoint = torch.load(checkpoint_path)
+
+    model.load_state_dict(checkpoint['weights'])
+    optimizer.load_state_dict(checkpoint['optim_state'])
+    scheduler.load_state_dict(checkpoint['scheduler_state'])
+
+
 def train_one_epoch(model, 
                     train_loader, 
                     val_loader, 
@@ -97,7 +105,7 @@ def train_one_epoch(model,
         'optim_state': optimizer.state_dict(),
         'scheduler_state': scheduler.state_dict()
     })
-    torch.save(state_dicts, f"{args.output_dir}/model-epoch{epoch}.bin")
+    torch.save(state_dicts, f"{args.output_dir}/model_epoch{epoch}.tar")
 
     # validation
     _, preds = get_raw_preds(model, val_loader, args.device)
@@ -131,12 +139,19 @@ def train(model, train_loader, val_loader, args):
     scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=warmup_steps,
                                                 num_training_steps=num_train_optimization_steps)  # PyTorch scheduler
     
+    # loading checkpoint
+    if args.checkpoint_path is not None:
+        print("Loading checkpoint ...")
+        load_checkpoint(model, optimizer, scheduler, args.checkpoint_path)
+
+    # logging
     state_dicts = {
         'weights': model.state_dict(),
         'optim_state': optimizer.state_dict(),
         'scheduler_state': scheduler.state_dict()
     }
 
+    # criterion
     reg_criterion = torch.nn.L1Loss(reduction='none')
     scaler = torch.cuda.amp.GradScaler()
 
@@ -154,7 +169,7 @@ def train(model, train_loader, val_loader, args):
     ).str.split()
     preds = val_df.groupby('id')['cell_id'].apply(list)
     print('> Baseline score:', kendall_tau(df_orders.loc[preds.index], preds))
-    
+
     # training
     for epoch in range(1, args.epochs+1):
         point_loss_list = []
@@ -208,6 +223,8 @@ def parse_args():
     parser.add_argument('--accumulation_steps', type=int, default=8)
     parser.add_argument('--lr', type=float, default=3e-5)
 
+    parser.add_argument('--checkpoint_path', type=str, default=None)
+
     parser.add_argument('--wandb_mode', type=str, default="disabled")
     parser.add_argument('--wandb_name', type=str, default=None)
     parser.add_argument('--output_dir', type=str, default="./outputs")
@@ -223,6 +240,9 @@ def parse_args():
     args.df_md_cell_path = args.proc_data_dir / "df_md_cell.pkl"
     args.nb_meta_data_path = args.proc_data_dir / "nb_meta_data.json"
 
+    if args.checkpoint_path is not None:
+        args.checkpoint_path = Path(args.checkpoint_path)
+
     args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     return args
@@ -230,6 +250,7 @@ def parse_args():
 
 if __name__ == '__main__':
     print("BIG NOTE: Don't forget to bash the env.sh!")
+    print("="*50)
 
     args = parse_args()
     wandb.init(
