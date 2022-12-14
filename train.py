@@ -194,8 +194,8 @@ def parse_args():
     parser.add_argument('--preprocess_data', action="store_true")
     parser.add_argument('--no-preprocess_data', action="store_false")
     parser.set_defaults(feature=True)
-    parser.add_argument('--train_size', type=int, default=0.01)
-    parser.add_argument('--val_size', type=int, default=0.1)
+    parser.add_argument('--train_size', type=float, default=0.01)
+    parser.add_argument('--val_size', type=float, default=0.1)
 
     parser.add_argument('--batch_size', type=int, default=1)
     parser.add_argument('--n_workers', type=int, default=1)
