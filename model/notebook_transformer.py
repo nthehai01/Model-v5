@@ -69,7 +69,7 @@ class PositionalEncoder(nn.Module):
 
         pos_encoding = self._generate_positional_encoding(max_cell, emb_dim)
 
-        x += pos_encoding[:, :max_cell, :]
+        x += pos_encoding[:, :max_cell, :].to(x.device)
         x = self.dropout(x)
         return x
 
