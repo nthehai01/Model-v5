@@ -167,8 +167,6 @@ def train(model, train_loader, val_loader, args):
     preds = val_df.groupby('id')['cell_id'].apply(list)
     print('> Baseline score:', kendall_tau(df_orders.loc[preds.index], preds))
 
-    print(optimizer.state_dict)
-
     # training
     for epoch in range(1, args.epochs+1):
         point_loss_list = []
