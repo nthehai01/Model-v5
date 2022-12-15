@@ -77,7 +77,7 @@ def preprocess(args):
     random.shuffle(train_paths)
 
     n_trains = int(len(train_paths) * args.train_size)
-    train_paths = train_paths[:n_trains]
+    train_paths = train_paths[args.start_train_idx:n_trains+args.start_train_idx]
 
     with mp.Pool(mp.cpu_count()) as p:
         notebooks_train = list(
