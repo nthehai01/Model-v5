@@ -31,6 +31,8 @@ def load_checkpoint(model, optimizer, scheduler, checkpoint_path, restore_weight
         optimizer.load_state_dict(checkpoint['optim_state'])
         scheduler.load_state_dict(checkpoint['scheduler_state'])
 
+    return model, optimizer, scheduler
+
 
 def train_one_epoch(model, 
                     train_loader, 
@@ -138,7 +140,7 @@ def train(model, train_loader, val_loader, args):
     
     # loading checkpoint
     if args.checkpoint_path is not None:
-        load_checkpoint(model, optimizer, scheduler, args.checkpoint_path, args.restore_weights_only)
+        model, optimizer, scheduler = load_checkpoint(model, optimizer, scheduler, args.checkpoint_path, args.restore_weights_only)
         print("Checkpoint loaded.")
 
     # logging
