@@ -13,7 +13,7 @@ from utils import make_folder, seed_everything
 from datasets import get_dataloader
 from model.notebook_transformer import NotebookTransformer
 from utils.metrics import kendall_tau
-from utils.eval import get_raw_preds, get_point_preds
+from utils.eval import predict
 from datasets.preprocess import preprocess
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -30,8 +30,6 @@ def load_checkpoint(model, optimizer, scheduler, checkpoint_path, restore_weight
     if not restore_weights_only:
         optimizer.load_state_dict(checkpoint['optim_state'])
         scheduler.load_state_dict(checkpoint['scheduler_state'])
-
-    return model, optimizer, scheduler
 
 
 def train_one_epoch(model, 
@@ -107,8 +105,7 @@ def train_one_epoch(model,
     torch.save(state_dicts, f"{args.output_dir}/model_epoch{epoch}.tar")
 
     # validation
-    _, preds = get_raw_preds(model, val_loader, args.device)
-    pred_series = get_point_preds(preds, val_df)
+    pred_series = predict(model, val_loader, val_df, args.device, "Validating")
 
     metrics = {}
     metrics['score'] = kendall_tau(df_orders.loc[pred_series.index], pred_series)
@@ -140,7 +137,7 @@ def train(model, train_loader, val_loader, args):
     
     # loading checkpoint
     if args.checkpoint_path is not None:
-        model, optimizer, scheduler = load_checkpoint(model, optimizer, scheduler, args.checkpoint_path, args.restore_weights_only)
+        load_checkpoint(model, optimizer, scheduler, args.checkpoint_path, args.restore_weights_only)
         print("Checkpoint loaded.")
 
     # logging
@@ -160,14 +157,14 @@ def train(model, train_loader, val_loader, args):
     df_md_cell = pd.read_pickle(args.df_md_cell_path).set_index('id')
     df_cell = df_code_cell.append(df_md_cell)
     val_df = df_cell.loc[val_ids.tolist()]
-
     df_orders = pd.read_csv(
         args.raw_data_dir / 'train_orders.csv',
         index_col='id',
         squeeze=True,
     ).str.split()
-    preds = val_df.groupby('id')['cell_id'].apply(list)
-    print('> Baseline score:', kendall_tau(df_orders.loc[preds.index], preds))
+
+    pred_series = predict(model, val_loader, val_df, args.device, "Get baseline")
+    print('> Baseline score:', kendall_tau(df_orders.loc[pred_series.index], pred_series))
 
     # training
     for epoch in range(1, args.epochs+1):
@@ -218,7 +215,7 @@ def parse_args():
 
     parser.add_argument('--batch_size', type=int, default=1)
     parser.add_argument('--n_workers', type=int, default=1)
-    parser.add_argument('--epochs', type=int, default=1)
+    parser.add_argument('--epochs', type=int, default=2)
     parser.add_argument('--accumulation_steps', type=int, default=8)
     parser.add_argument('--lr', type=float, default=3e-5)
 
@@ -229,7 +226,7 @@ def parse_args():
 
     parser.add_argument('--wandb_mode', type=str, default="disabled")
     parser.add_argument('--wandb_name', type=str, default=None)
-    parser.add_argument('--output_dir', type=str, default="None")
+    parser.add_argument('--output_dir', type=str, default=None)
 
     args = parser.parse_args()
 
@@ -241,9 +238,6 @@ def parse_args():
     args.df_code_cell_path = args.proc_data_dir / "df_code_cell.pkl"
     args.df_md_cell_path = args.proc_data_dir / "df_md_cell.pkl"
     args.nb_meta_data_path = args.proc_data_dir / "nb_meta_data.json"
-
-    if args.checkpoint_path is not None:
-        args.checkpoint_path = Path(args.checkpoint_path)
 
     args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     

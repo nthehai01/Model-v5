@@ -6,9 +6,9 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 
-def get_raw_preds(model: nn.Module, loader: DataLoader, device):
+def get_raw_preds(model: nn.Module, loader: DataLoader, device, name):
     model.eval()
-    pbar = tqdm(loader, desc="Validating")    
+    pbar = tqdm(loader, desc=name)    
     nb_ids = []
     point_preds = []
     with torch.inference_mode():
@@ -50,4 +50,11 @@ def code_rank_correction(df):
     df.loc[df['cell_type'] == 'code', 'pp_rank'] = df.loc[
         df['cell_type'] == 'code'
     ].sort_values(['id', 'rel_pos'])['pred_rank'].values
-    print('non-corrected %:', (df['pp_rank'] == df['pred_rank']).mean())
+    print('> Non-corrected %:', (df['pp_rank'] == df['pred_rank']).mean())
+
+
+def predict(model, loader, df, device, name):
+    _, preds = get_raw_preds(model, loader, device, name)
+    pred_series = get_point_preds(preds, df)
+
+    return pred_series
