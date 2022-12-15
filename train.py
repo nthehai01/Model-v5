@@ -116,7 +116,7 @@ def train_one_epoch(model,
     metrics['avg_point_loss'] = np.mean(point_loss_list)
     wandb.log(metrics)
     print("> Val score:", metrics['score'])
-    print("> Avg point loss:", metrics['avg_point_loss'])
+    print("> Train loss:", metrics['avg_point_loss'])
 
     return point_loss_list
 
@@ -141,8 +141,8 @@ def train(model, train_loader, val_loader, args):
     
     # loading checkpoint
     if args.checkpoint_path is not None:
-        print("Loading checkpoint ...")
         load_checkpoint(model, optimizer, scheduler, args.checkpoint_path)
+        print("Checkpoint loaded.")
 
     # logging
     state_dicts = {
@@ -170,27 +170,29 @@ def train(model, train_loader, val_loader, args):
     preds = val_df.groupby('id')['cell_id'].apply(list)
     print('> Baseline score:', kendall_tau(df_orders.loc[preds.index], preds))
 
-    # training
-    for epoch in range(1, args.epochs+1):
-        point_loss_list = []
-        point_loss_list = train_one_epoch(
-            model, 
-            train_loader, 
-            val_loader,
-            val_df, 
-            df_orders, 
-            reg_criterion, 
-            scaler, 
-            optimizer, 
-            scheduler, 
-            state_dicts, 
-            point_loss_list, 
-            epoch, 
-            args
-        )
+    print(optimizer)
 
-        if scheduler.get_last_lr()[0] == 0:
-            break
+    # # training
+    # for epoch in range(1, args.epochs+1):
+    #     point_loss_list = []
+    #     point_loss_list = train_one_epoch(
+    #         model, 
+    #         train_loader, 
+    #         val_loader,
+    #         val_df, 
+    #         df_orders, 
+    #         reg_criterion, 
+    #         scaler, 
+    #         optimizer, 
+    #         scheduler, 
+    #         state_dicts, 
+    #         point_loss_list, 
+    #         epoch, 
+    #         args
+    #     )
+
+    #     if scheduler.get_last_lr()[0] == 0:
+    #         break
 
 
 def parse_args():
@@ -227,7 +229,7 @@ def parse_args():
 
     parser.add_argument('--wandb_mode', type=str, default="disabled")
     parser.add_argument('--wandb_name', type=str, default=None)
-    parser.add_argument('--output_dir', type=str, default="./outputs")
+    parser.add_argument('--output_dir', type=str, default="None")
 
     args = parser.parse_args()
 
