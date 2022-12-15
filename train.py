@@ -9,7 +9,7 @@ from tqdm import tqdm
 import numpy as np
 import warnings
 
-from utils import make_folder, seed_everything, lr_to_4sf
+from utils import make_folder, seed_everything
 from datasets import get_dataloader
 from model.notebook_transformer import NotebookTransformer
 from utils.metrics import kendall_tau
@@ -23,12 +23,13 @@ warnings.filterwarnings("ignore")
 SEED = int(os.environ['SEED'])
 
 
-def load_checkpoint(model, optimizer, scheduler, checkpoint_path):
+def load_checkpoint(model, optimizer, scheduler, checkpoint_path, restore_weights_only=True):
     checkpoint = torch.load(checkpoint_path)
 
     model.load_state_dict(checkpoint['weights'])
-    optimizer.load_state_dict(checkpoint['optim_state'])
-    scheduler.load_state_dict(checkpoint['scheduler_state'])
+    if not restore_weights_only:
+        optimizer.load_state_dict(checkpoint['optim_state'])
+        scheduler.load_state_dict(checkpoint['scheduler_state'])
 
 
 def train_one_epoch(model, 
@@ -87,17 +88,13 @@ def train_one_epoch(model,
             metrics['diff_lr'] = metrics['next_lr'] - metrics['prev_lr']
             wandb.log(metrics)
 
-            # pbar.set_postfix(
-            #     point_loss=metrics['point_loss'], 
-            #     lr=lr_to_4sf(scheduler.get_last_lr())
-            # )
             pbar.set_postfix(
                 loss=metrics['point_loss'], 
                 lr=scheduler.get_last_lr()[0]
             )
 
         if scheduler.get_last_lr()[0] == 0:
-            print("* Learning rate = 0. Early stopping at epoch", epoch)
+            print(" * lr=0, EARLY STOPPING")
             break
 
     state_dicts.update({
@@ -141,7 +138,7 @@ def train(model, train_loader, val_loader, args):
     
     # loading checkpoint
     if args.checkpoint_path is not None:
-        load_checkpoint(model, optimizer, scheduler, args.checkpoint_path)
+        load_checkpoint(model, optimizer, scheduler, args.checkpoint_path, args.restore_weights_only)
         print("Checkpoint loaded.")
 
     # logging
@@ -170,29 +167,29 @@ def train(model, train_loader, val_loader, args):
     preds = val_df.groupby('id')['cell_id'].apply(list)
     print('> Baseline score:', kendall_tau(df_orders.loc[preds.index], preds))
 
-    print(optimizer)
+    print(optimizer.state_dict)
 
-    # # training
-    # for epoch in range(1, args.epochs+1):
-    #     point_loss_list = []
-    #     point_loss_list = train_one_epoch(
-    #         model, 
-    #         train_loader, 
-    #         val_loader,
-    #         val_df, 
-    #         df_orders, 
-    #         reg_criterion, 
-    #         scaler, 
-    #         optimizer, 
-    #         scheduler, 
-    #         state_dicts, 
-    #         point_loss_list, 
-    #         epoch, 
-    #         args
-    #     )
+    # training
+    for epoch in range(1, args.epochs+1):
+        point_loss_list = []
+        point_loss_list = train_one_epoch(
+            model, 
+            train_loader, 
+            val_loader,
+            val_df, 
+            df_orders, 
+            reg_criterion, 
+            scaler, 
+            optimizer, 
+            scheduler, 
+            state_dicts, 
+            point_loss_list, 
+            epoch, 
+            args
+        )
 
-    #     if scheduler.get_last_lr()[0] == 0:
-    #         break
+        if scheduler.get_last_lr()[0] == 0:
+            break
 
 
 def parse_args():
@@ -226,6 +223,9 @@ def parse_args():
     parser.add_argument('--lr', type=float, default=3e-5)
 
     parser.add_argument('--checkpoint_path', type=str, default=None)
+    parser.add_argument('--restore_weights_only', action="store_true")
+    parser.add_argument('--no-restore_weights_only', action="store_false", dest='restore_weights_only')
+    parser.set_defaults(restore_weights_only=True)
 
     parser.add_argument('--wandb_mode', type=str, default="disabled")
     parser.add_argument('--wandb_name', type=str, default=None)
