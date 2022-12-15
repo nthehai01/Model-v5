@@ -72,6 +72,7 @@ def train_val_split(nb_meta_data, df_nb, val_size, max_code_cells, max_md_cells)
 
 def preprocess(args):
     train_paths = list((args.raw_data_dir / 'train').glob('*.json'))
+    train_paths = np.array(train_paths)
     
     random.seed(SEED)
     random.shuffle(train_paths)
