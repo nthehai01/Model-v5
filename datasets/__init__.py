@@ -22,9 +22,14 @@ def seed_worker(worker_id):
 def get_dataloader(args, mode="test"):
     is_train = (mode == "train")
 
-    type = "{mode}_ids_path"  # "train_ids_path", "val_ids_path" or "test_ids_path"
-    ids_path = getattr(args, type.format(mode=mode))
-    df_id = pd.read_pickle(args.train_ids_path)
+    # type = "{mode}_ids_path"  # "train_ids_path", "val_ids_path" or "test_ids_path"
+    # ids_path = getattr(args, type.format(mode=mode))
+    # df_id = pd.read_pickle(args.train_ids_path)
+
+    df_id = (
+        pd.read_pickle(args.train_ids_path) 
+        if is_train else pd.read_pickle(args.val_ids_path)
+    ) 
     if mode == "train" and not args.preprocess_data:
         n_trains = int(len(list(df_id)) * args.train_size)
         df_id = df_id.head(n_trains)
