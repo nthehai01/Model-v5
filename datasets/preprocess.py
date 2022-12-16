@@ -9,6 +9,7 @@ import os
 
 
 SEED = int(os.environ['SEED'])
+PICKLE_PROTOCOL = int(os.environ['PICKLE_PROTOCOL'])
 
 
 def read_nb(path):
@@ -109,13 +110,13 @@ def preprocess(args):
         'rank', 
         'pct_rank', 
     ]]
-    df_merge[df_merge.cell_type == 'code'].to_pickle(args.df_code_cell_path)
-    df_merge[df_merge.cell_type == 'markdown'].to_pickle(args.df_md_cell_path)
+    df_merge[df_merge.cell_type == 'code'].to_pickle(args.df_code_cell_path, protocol=PICKLE_PROTOCOL)
+    df_merge[df_merge.cell_type == 'markdown'].to_pickle(args.df_md_cell_path, protocol=PICKLE_PROTOCOL)
 
     df_nb, nb_meta_data = obtain_nb_info(df_merge, args.raw_data_dir)
     json.dump(nb_meta_data, open(args.nb_meta_data_path,"wt"))
 
     train_ids, val_ids = train_val_split(nb_meta_data, df_nb, args.val_size, args.max_n_code_cells, args.max_n_md_cells)
-    train_ids.to_pickle(args.train_ids_path)
-    val_ids.to_pickle(args.val_ids_path)
+    train_ids.to_pickle(args.train_ids_path, protocol=PICKLE_PROTOCOL)
+    val_ids.to_pickle(args.val_ids_path, protocol=PICKLE_PROTOCOL)
     
