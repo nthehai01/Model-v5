@@ -5,6 +5,7 @@ import numpy as np
 import random
 import torch
 import os
+from pathlib import Path
 
 from datasets.notebook_dataset import NotebookDataset
 
@@ -22,8 +23,8 @@ def get_dataloader(args, mode="test"):
     is_train = (mode == "train")
 
     type = "{mode}_ids_path"  # "train_ids_path", "val_ids_path" or "test_ids_path"
-    type_ids_path = getattr(args, type.format(mode=mode))
-    df_id = pd.read_pickle(type_ids_path)
+    ids_path = getattr(args, type.format(mode=mode))
+    df_id = pd.read_pickle(Path(ids_path))
     if mode == "train" and not args.preprocess_data:
         n_trains = int(len(list(df_id)) * args.train_size)
         df_id = df_id.head(n_trains)
@@ -58,5 +59,5 @@ def get_dataloader(args, mode="test"):
         worker_init_fn=seed_worker,
         generator=g
     )
-    
+
     return data_loader
