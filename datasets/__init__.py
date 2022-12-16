@@ -12,6 +12,16 @@ from datasets.notebook_dataset import NotebookDataset
 SEED = int(os.environ['SEED'])
 
 
+def filter_train_ids(train_ids, args):
+    """
+    Filter out training notebooks that are in the test set.
+    """
+    test_ids = pd.read_pickle(args.test_ids_path)
+    idx_in = np.isin(train_ids.values, test_ids.values)
+    train_ids = train_ids.iloc[~idx_in].reset_index(drop=True)
+    return train_ids
+
+
 def seed_worker(worker_id):
     worker_seed = SEED
     np.random.seed(worker_seed)
@@ -24,6 +34,8 @@ def get_dataloader(args, mode="test"):
     type = "{mode}_ids_path"  # "train_ids_path", "val_ids_path" or "test_ids_path"
     ids_path = getattr(args, type.format(mode=mode))
     df_id = pd.read_pickle(ids_path)
+    if is_train:
+        df_id = filter_train_ids(df_id, args)
     df_code_cell = pd.read_pickle(args.df_code_cell_path).set_index("id")
     df_md_cell = pd.read_pickle(args.df_md_cell_path).set_index("id")
     nb_meta_data = json.load(open(args.nb_meta_data_path, "rt"))
