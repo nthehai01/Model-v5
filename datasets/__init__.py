@@ -26,7 +26,7 @@ def get_dataloader(args, mode="test"):
     df_id = pd.read_pickle(ids_path)
     if mode == "train" and not args.preprocess_data:
         n_trains = int(len(list(df_id)) * args.train_size)
-        df_id = df_id.head(n_trains)
+        df_id= df_id.iloc[args.start_train_idx:n_trains+args.start_train_idx]
 
     df_code_cell = pd.read_pickle(args.df_code_cell_path).set_index("id")
     df_md_cell = pd.read_pickle(args.df_md_cell_path).set_index("id")
