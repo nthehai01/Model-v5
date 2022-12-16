@@ -18,11 +18,16 @@ def seed_worker(worker_id):
     random.seed(worker_seed)
 
 
-def get_dataloader(args, is_train=False):
-    df_id = (
-        pd.read_pickle(args.train_ids_path) 
-        if is_train else pd.read_pickle(args.val_ids_path)
-    )  # "train_ida.pkl" or "val_ids.pkl"
+def get_dataloader(args, mode="test"):
+    is_train = (mode == "train")
+
+    type = "{mode}_ids_path"  # "train_ids_path", "val_ids_path" or "test_ids_path"
+    type_ids_path = getattr(args, type.format(mode=mode))
+    df_id = pd.read_pickle(type_ids_path)
+    if mode == "train" and not args.preprocess_data:
+        n_trains = int(len(list(df_id)) * args.train_size)
+        df_id = df_id.head(n_trains)
+
     df_code_cell = pd.read_pickle(args.df_code_cell_path).set_index("id")
     df_md_cell = pd.read_pickle(args.df_md_cell_path).set_index("id")
     nb_meta_data = json.load(open(args.nb_meta_data_path, "rt"))
@@ -53,4 +58,5 @@ def get_dataloader(args, is_train=False):
         worker_init_fn=seed_worker,
         generator=g
     )
+    
     return data_loader
