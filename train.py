@@ -215,6 +215,7 @@ def parse_args():
     parser.add_argument('--start_train_idx', type=int, default=0)
 
     parser.add_argument('--test_ids_path', type=str, default="data/raw")
+    parser.add_argument('--non_en_ids_path', type=str, default="data/raw")
 
     parser.add_argument('--batch_size', type=int, default=1)
     parser.add_argument('--n_workers', type=int, default=1)
@@ -239,6 +240,7 @@ def parse_args():
     args.train_ids_path = args.proc_data_dir / "train_ids.pkl"
     args.val_ids_path = args.proc_data_dir / "val_ids.pkl"
     args.test_ids_path = Path(args.test_ids_path)
+    args.non_en_ids_path = Path(args.non_en_ids_path)
     args.df_code_cell_path = args.proc_data_dir / "df_code_cell.pkl"
     args.df_md_cell_path = args.proc_data_dir / "df_md_cell.pkl"
     args.nb_meta_data_path = args.proc_data_dir / "nb_meta_data.json"
