@@ -1,5 +1,6 @@
 import torch
 from tqdm import tqdm
+import gc
 
 
 def eval(model, loader, criterion, device, name):
@@ -32,5 +33,11 @@ def eval(model, loader, criterion, device, name):
                 )
 
             loss_list.append(masked_lm_loss.item())
+
+    # tidy up
+    del md_pred_scores
+    gc.collect()
+    if device == torch.device('cuda'):
+        torch.cuda.empty_cache()
 
     return loss_list

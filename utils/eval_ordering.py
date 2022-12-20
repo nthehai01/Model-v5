@@ -4,6 +4,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+import gc
 
 
 def get_raw_preds(model: nn.Module, loader: DataLoader, device, name):
@@ -31,6 +32,12 @@ def get_raw_preds(model: nn.Module, loader: DataLoader, device, name):
 
             indices = torch.where(batch['reg_masks'] == True)
             point_preds.extend(point_pred[indices].cpu().numpy().tolist())
+
+    # tidy up
+    del point_pred
+    gc.collect()
+    if device == torch.device('cuda'):
+        torch.cuda.empty_cache()
    
     return nb_ids, point_preds
 

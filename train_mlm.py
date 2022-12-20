@@ -7,6 +7,7 @@ from transformers import AdamW, get_linear_schedule_with_warmup
 from tqdm import tqdm
 import numpy as np
 import warnings
+import gc
 
 from utils import load_checkpoint, make_folder, seed_everything
 from datasets import get_dataloader
@@ -88,6 +89,12 @@ def train_one_epoch(model,
     torch.save(state_dicts, f"{args.output_dir}/notebook_mlm_epoch{epoch}.tar")
 
     print("> Avg train Loss:", np.mean(loss_list))
+
+    # tidy up
+    del md_pred_scores
+    gc.collect()
+    if args.device == torch.device('cuda'):
+        torch.cuda.empty_cache()
 
     return loss_list
 

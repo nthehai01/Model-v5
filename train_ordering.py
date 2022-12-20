@@ -8,6 +8,7 @@ import pandas as pd
 from tqdm import tqdm
 import numpy as np
 import warnings
+import gc
 
 from utils import load_checkpoint, make_folder, seed_everything
 from datasets import get_dataloader
@@ -101,6 +102,12 @@ def train_one_epoch(model,
     metrics['avg_point_loss'] = np.mean(point_loss_list)
     wandb.log(metrics)
     print("> Avg train loss:", metrics['avg_point_loss'])
+
+    # tidy up
+    del md_pred_scores
+    gc.collect()
+    if args.device == torch.device('cuda'):
+        torch.cuda.empty_cache()
 
     return point_loss_list
 
