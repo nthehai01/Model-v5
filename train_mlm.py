@@ -201,6 +201,8 @@ def parse_args():
     args.df_md_cell_path = args.proc_data_dir / "df_md_cell.pkl"
     args.nb_meta_data_path = args.proc_data_dir / "nb_meta_data.json"
 
+    args.restore_weights_only = False
+
     args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     return args
