@@ -128,9 +128,9 @@ def train(model, train_loader, val_loader, args):
     # criterion
     criterion = nn.CrossEntropyLoss(ignore_index=NON_MASKED_INDEX, reduction='mean')
 
-    # baseline
-    base_loss_list = eval(model, val_loader, criterion, args.device, "Get baseline")
-    print("> Avg base loss:", np.mean(base_loss_list))
+    # # baseline
+    # base_loss_list = eval(model, val_loader, criterion, args.device, "Get baseline")
+    # print("> Avg base loss:", np.mean(base_loss_list))
     
     # training
     for epoch in range(args.start_epoch, args.epochs+1):
@@ -145,9 +145,9 @@ def train(model, train_loader, val_loader, args):
             args
         )
 
-        # evaluate
-        val_loss_list = eval(model, val_loader, criterion, args.device, "Validating")
-        print("> Avg val loss:", np.mean(val_loss_list))
+        # # evaluate
+        # val_loss_list = eval(model, val_loader, criterion, args.device, "Validating")
+        # print("> Avg val loss:", np.mean(val_loss_list))
 
         if scheduler.get_last_lr()[0] == 0:
             break
