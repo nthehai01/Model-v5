@@ -74,24 +74,24 @@ def train_val_split(nb_meta_data, df_nb, val_size):
     return train_df, val_df
 
 
-def remove_test_ids(train_ids, test_ids_path):
+def remove_test_ids(df, test_ids_path):
     """
     Filter out training notebooks that are in the test set.
     """
     test_ids = pd.read_pickle(test_ids_path)
-    idx_in = np.isin(train_ids.values, test_ids.values)
-    train_ids = train_ids.iloc[~idx_in].reset_index(drop=True)
-    return train_ids
+    idx_in = np.isin(df.id.values, test_ids.values)
+    df = df.iloc[~idx_in].reset_index(drop=True)
+    return df
 
 
-def remove_non_en_nb(train_ids, non_en_ids_path):
+def remove_non_en_nb(df, non_en_ids_path):
     """
     Filter out non-english notebooks.
     """
     non_en_ids = pd.read_pickle(non_en_ids_path)
-    idx_in = np.isin(train_ids.values, non_en_ids.values)
-    train_ids = train_ids.iloc[~idx_in].reset_index(drop=True)
-    return train_ids
+    idx_in = np.isin(df.id.values, non_en_ids.values)
+    df = df.iloc[~idx_in].reset_index(drop=True)
+    return df
 
 
 def preprocess(args):
