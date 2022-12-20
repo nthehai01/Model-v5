@@ -153,7 +153,8 @@ def train(model, train_loader, val_loader, args):
             break
         
         # REMOVE IF SUBMITTING
-        if args.one_epoch_per_save:
+        args.n_epochs_per_save -= 1
+        if args.n_epochs_per_save == 0:
             break
 
 
@@ -186,10 +187,7 @@ def parse_args():
     parser.add_argument('--accumulation_steps', type=int, default=8)
     parser.add_argument('--lr', type=float, default=3e-5)
     
-    # REMOVE IF SUBMITTING
-    parser.add_argument('--one_epoch_per_save', action="store_true")
-    parser.add_argument('--no-one_epoch_per_save', action="store_false", dest='one_epoch_per_save')
-    parser.set_defaults(one_epoch_per_save=True)
+    parser.add_argument('--n_epochs_per_save', type=int, default=100)  # REMOVE IF SUBMITTING
 
     parser.add_argument('--checkpoint_path', type=str, default=None)
 

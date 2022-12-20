@@ -104,7 +104,7 @@ def train_one_epoch(model,
     print("> Avg train loss:", metrics['avg_point_loss'])
 
     # tidy up
-    del md_pred_scores
+    del point_pred, reg_mask
     gc.collect()
     if args.device == torch.device('cuda'):
         torch.cuda.empty_cache()
@@ -191,7 +191,8 @@ def train(model, train_loader, val_loader, args):
             break
 
         # REMOVE IF SUBMITTING
-        if args.one_epoch_per_save:
+        args.n_epochs_per_save -= 1
+        if args.n_epochs_per_save == 0:
             break
 
 
@@ -228,10 +229,7 @@ def parse_args():
     parser.add_argument('--accumulation_steps', type=int, default=8)
     parser.add_argument('--lr', type=float, default=3e-5)
 
-    # REMOVE IF SUBMITTING
-    parser.add_argument('--one_epoch_per_save', action="store_true")
-    parser.add_argument('--no-one_epoch_per_save', action="store_false", dest='one_epoch_per_save')
-    parser.set_defaults(one_epoch_per_save=True)
+    parser.add_argument('--n_epochs_per_save', type=int, default=100)  # REMOVE IF SUBMITTING
 
     parser.add_argument('--checkpoint_path', type=str, default=None)
     parser.add_argument('--restore_weights_only', action="store_true")
