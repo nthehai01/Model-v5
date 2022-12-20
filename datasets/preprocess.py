@@ -5,11 +5,10 @@ import pandas as pd
 import numpy as np
 import json
 from sklearn.model_selection import GroupShuffleSplit
-import os
 
 
-SEED = int(os.environ['SEED'])
-PICKLE_PROTOCOL = int(os.environ['PICKLE_PROTOCOL'])
+SEED = 42
+PICKLE_PROTOCOL = 4
 
 
 def read_nb(path):
@@ -57,18 +56,42 @@ def obtain_nb_info(df_merge, raw_data_dir):
     return df_nb, nb_meta_data
 
 
-def train_val_split(nb_meta_data, df_nb, val_size, max_code_cells, max_md_cells):
+def filter_by_n_cells(df_ids, nb_meta_data, max_code_cells, max_md_cells):
+    df = df_ids[
+        (df_ids.map(lambda x: nb_meta_data[x]['n_code_cells']) <= max_code_cells) &
+        (df_ids.map(lambda x: nb_meta_data[x]['n_md_cells']) <= max_md_cells)
+    ].reset_index(drop=True)
+    
+    return df
+
+
+def train_val_split(nb_meta_data, df_nb, val_size):
     splitter = GroupShuffleSplit(n_splits=1, test_size=val_size, random_state=SEED)
     train_ind, val_ind = next(splitter.split(df_nb, groups=df_nb["ancestor_id"]))
     train_df = df_nb.loc[train_ind, 'id'].reset_index(drop=True)
     val_df = df_nb.loc[val_ind, 'id'].reset_index(drop=True)
 
-    train_df = train_df[
-        (train_df.map(lambda x: nb_meta_data[x]['n_code_cells']) <= max_code_cells) &
-        (train_df.map(lambda x: nb_meta_data[x]['n_md_cells']) <= max_md_cells)
-    ].reset_index(drop=True)
-    
     return train_df, val_df
+
+
+def remove_test_ids(train_ids, test_ids_path):
+    """
+    Filter out training notebooks that are in the test set.
+    """
+    test_ids = pd.read_pickle(test_ids_path)
+    idx_in = np.isin(train_ids.values, test_ids.values)
+    train_ids = train_ids.iloc[~idx_in].reset_index(drop=True)
+    return train_ids
+
+
+def remove_non_en_nb(train_ids, non_en_ids_path):
+    """
+    Filter out non-english notebooks.
+    """
+    non_en_ids = pd.read_pickle(non_en_ids_path)
+    idx_in = np.isin(train_ids.values, non_en_ids.values)
+    train_ids = train_ids.iloc[~idx_in].reset_index(drop=True)
+    return train_ids
 
 
 def preprocess(args):
@@ -90,6 +113,8 @@ def preprocess(args):
         )
 
     df = pd.concat(notebooks_train).reset_index()
+    df = remove_test_ids(df, args.test_ids_path)
+    df = remove_non_en_nb(df, args.non_en_ids_path)
 
     df['is_code'] = (df['cell_type'] == 'code').astype(np.int8)
     df['pos'] = df.groupby('id')['cell_id'].cumcount() + 1  # [1:TOTAL_MAX_CELLS]
@@ -110,13 +135,16 @@ def preprocess(args):
         'rank', 
         'pct_rank', 
     ]]
-    df_merge[df_merge.cell_type == 'code'].to_pickle(args.df_code_cell_path, protocol=PICKLE_PROTOCOL)
-    df_merge[df_merge.cell_type == 'markdown'].to_pickle(args.df_md_cell_path, protocol=PICKLE_PROTOCOL)
 
     df_nb, nb_meta_data = obtain_nb_info(df_merge, args.raw_data_dir)
-    json.dump(nb_meta_data, open(args.nb_meta_data_path,"wt"))
 
-    train_ids, val_ids = train_val_split(nb_meta_data, df_nb, args.val_size, args.max_n_code_cells, args.max_n_md_cells)
+    train_ids, val_ids = train_val_split(nb_meta_data, df_nb, args.val_size)
+    train_ids = filter_by_n_cells(train_ids, nb_meta_data, args.max_n_code_cells, args.max_n_md_cells)
+    
     train_ids.to_pickle(args.train_ids_path, protocol=PICKLE_PROTOCOL)
     val_ids.to_pickle(args.val_ids_path, protocol=PICKLE_PROTOCOL)
-    
+    df_merge[df_merge.cell_type == 'code'].to_pickle(args.df_code_cell_path, protocol=PICKLE_PROTOCOL)
+    df_merge[df_merge.cell_type == 'markdown'].to_pickle(args.df_md_cell_path, protocol=PICKLE_PROTOCOL)
+    json.dump(nb_meta_data, open(args.nb_meta_data_path, "wt"))
+
+    del train_ids, val_ids, df_merge, nb_meta_data
