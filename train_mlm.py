@@ -144,6 +144,10 @@ def train(model, train_loader, val_loader, args):
 
         if scheduler.get_last_lr()[0] == 0:
             break
+        
+        # REMOVE IF SUBMITTING
+        if args.one_epoch_per_save:
+            break
 
 
 def parse_args():
@@ -163,7 +167,7 @@ def parse_args():
     parser.set_defaults(preprocess_data=True)
     parser.add_argument('--train_size', type=float, default=0.0001)
     parser.add_argument('--val_size', type=float, default=0.1)
-    parser.add_argument('--start_train_idx', type=int, default=0)
+    parser.add_argument('--start_train_idx', type=int, default=0)  # REMOVE IF SUBMITTING
 
     parser.add_argument('--test_ids_path', type=str, default="data/raw")
     parser.add_argument('--non_en_ids_path', type=str, default="data/raw")
@@ -174,6 +178,11 @@ def parse_args():
     parser.add_argument('--start_epoch', type=int, default=1)
     parser.add_argument('--accumulation_steps', type=int, default=8)
     parser.add_argument('--lr', type=float, default=3e-5)
+    
+    # REMOVE IF SUBMITTING
+    parser.add_argument('--one_epoch_per_save', action="store_true")
+    parser.add_argument('--no-one_epoch_per_save', action="store_false", dest='one_epoch_per_save')
+    parser.set_defaults(one_epoch_per_save=True)
 
     parser.add_argument('--checkpoint_path', type=str, default=None)
 
