@@ -9,11 +9,11 @@ from tqdm import tqdm
 import numpy as np
 import warnings
 
-from utils import make_folder, seed_everything
+from utils import load_checkpoint, make_folder, seed_everything
 from datasets import get_dataloader
 from models.notebook_ordering import NotebookOrdering
 from utils.metrics import kendall_tau
-from utils.eval import predict
+from utils.eval_ordering import predict
 from datasets.preprocess import preprocess
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -22,17 +22,6 @@ warnings.filterwarnings("ignore")
 
 TRAIN_MODE = "ordering"
 SEED = int(os.environ['SEED'])
-
-
-def load_checkpoint(model, optimizer, scheduler, checkpoint_path, restore_weights_only=True):
-    checkpoint = torch.load(checkpoint_path)
-
-    args.start_epoch = checkpoint['epoch']
-
-    model.load_state_dict(checkpoint['weights'])
-    if not restore_weights_only:
-        optimizer.load_state_dict(checkpoint['optim_state'])
-        scheduler.load_state_dict(checkpoint['scheduler_state'])
 
 
 def train_one_epoch(model, 
@@ -108,15 +97,10 @@ def train_one_epoch(model,
     })
     torch.save(state_dicts, f"{args.output_dir}/notebook_ordering_epoch{epoch}.tar")
 
-    # validation
-    pred_series = predict(model, val_loader, val_df, args.device, "Validating")
-
     metrics = {}
-    metrics['score'] = kendall_tau(df_orders.loc[pred_series.index], pred_series)
     metrics['avg_point_loss'] = np.mean(point_loss_list)
     wandb.log(metrics)
-    print("> Val score:", metrics['score'])
-    print("> Train loss:", metrics['avg_point_loss'])
+    print("> Avg train loss:", metrics['avg_point_loss'])
 
     return point_loss_list
 
@@ -141,7 +125,7 @@ def train(model, train_loader, val_loader, args):
     
     # loading checkpoint
     if args.checkpoint_path is not None:
-        load_checkpoint(model, optimizer, scheduler, args.checkpoint_path, args.restore_weights_only)
+        load_checkpoint(model, optimizer, scheduler, args)
         print("Checkpoint loaded.")
 
     # logging
@@ -187,6 +171,14 @@ def train(model, train_loader, val_loader, args):
             epoch, 
             args
         )
+
+        # validation
+        pred_series = predict(model, val_loader, val_df, args.device, "Validating")
+
+        metrics = {}
+        metrics['score'] = kendall_tau(df_orders.loc[pred_series.index], pred_series)
+        wandb.log(metrics)
+        print("> Val score:", metrics['score'])
 
         if scheduler.get_last_lr()[0] == 0:
             break

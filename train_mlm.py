@@ -8,10 +8,11 @@ from tqdm import tqdm
 import numpy as np
 import warnings
 
-from utils import make_folder, seed_everything
+from utils import load_checkpoint, make_folder, seed_everything
 from datasets import get_dataloader
 from models.notebook_mlm import NotebookMLM
 from datasets.preprocess import preprocess
+from utils.eval_mlm import eval
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 warnings.filterwarnings("ignore")
@@ -21,17 +22,6 @@ TRAIN_MODE = "mlm"
 SEED = int(os.environ['SEED'])
 NON_MASKED_INDEX = int(os.environ['NON_MASKED_INDEX'])
 MAX_GRADIENT = float(os.environ['MAX_GRADIENT'])
-
-
-def load_checkpoint(model, optimizer, scheduler, checkpoint_path, restore_weights_only=True):
-    checkpoint = torch.load(checkpoint_path)
-
-    args.start_epoch = checkpoint['epoch']
-
-    model.load_state_dict(checkpoint['weights'])
-    if not restore_weights_only:
-        optimizer.load_state_dict(checkpoint['optim_state'])
-        scheduler.load_state_dict(checkpoint['scheduler_state'])
 
 
 def train_one_epoch(model, 
@@ -97,12 +87,12 @@ def train_one_epoch(model,
     })
     torch.save(state_dicts, f"{args.output_dir}/notebook_mlm_epoch{epoch}.tar")
 
-    print("> Train Loss:", np.mean(loss_list))
+    print("> Avg train Loss:", np.mean(loss_list))
 
     return loss_list
 
 
-def train(model, train_loader, args):
+def train(model, train_loader, val_loader, args):
     seed_everything(SEED)
 
     # creating optimizer and lr schedulers
@@ -117,7 +107,7 @@ def train(model, train_loader, args):
     
     # loading checkpoint
     if args.checkpoint_path is not None:
-        load_checkpoint(model, optimizer, scheduler, args.checkpoint_path, args.restore_weights_only)
+        load_checkpoint(model, optimizer, scheduler, args)
         print("Checkpoint loaded.")
 
     # logging
@@ -130,6 +120,10 @@ def train(model, train_loader, args):
 
     # criterion
     criterion = nn.CrossEntropyLoss(ignore_index=NON_MASKED_INDEX, reduction='mean')
+
+    # baseline
+    base_loss_list = eval(model, val_loader, criterion, args.device, "Get baseline")
+    print("> Avg base loss:", np.mean(base_loss_list))
     
     # training
     for epoch in range(args.start_epoch, args.epochs+1):
@@ -143,6 +137,10 @@ def train(model, train_loader, args):
             epoch, 
             args
         )
+
+        # evaluate
+        val_loss_list = eval(model, val_loader, criterion, args.device, "Validating")
+        print("> Avg val loss:", np.mean(val_loss_list))
 
         if scheduler.get_last_lr()[0] == 0:
             break
@@ -214,6 +212,9 @@ if __name__ == '__main__':
 
     print("Loading training data...")
     train_loader = get_dataloader(args=args, objective=TRAIN_MODE, mode="train")
+    print("Loading validating data...")
+    val_loader = get_dataloader(args=args, objective=TRAIN_MODE, mode="val")
+    print("="*50)
     
     model = NotebookMLM(
         args.code_pretrained, 
@@ -224,4 +225,4 @@ if __name__ == '__main__':
     model.to(args.device)
 
     print("Starting training...")
-    train(model, train_loader, args)
+    train(model, train_loader, val_loader, args)
