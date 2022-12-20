@@ -78,9 +78,9 @@ def remove_test_ids(df, test_ids_path):
     """
     Filter out training notebooks that are in the test set.
     """
+    
     test_ids = pd.read_pickle(test_ids_path)
-    idx_in = np.isin(df.id.values, test_ids.values)
-    df = df.iloc[~idx_in].reset_index(drop=True)
+    df = df[~df['id'].isin(test_ids.values)].reset_index(drop=True)
     return df
 
 
@@ -88,9 +88,9 @@ def remove_non_en_nb(df, non_en_ids_path):
     """
     Filter out non-english notebooks.
     """
+    
     non_en_ids = pd.read_pickle(non_en_ids_path)
-    idx_in = np.isin(df.id.values, non_en_ids.values)
-    df = df.iloc[~idx_in].reset_index(drop=True)
+    df = df[~df['id'].isin(non_en_ids.values)].reset_index(drop=True)
     return df
 
 
