@@ -225,7 +225,7 @@ def load_checkpoint(model, optimizer, scheduler, args):
 
     args.start_epoch = checkpoint['epoch'] + 1
 
-    model.load_state_dict(checkpoint['weights'])
+    model.load_state_dict(checkpoint['weights'], strict=False)
     if not args.restore_weights_only:
         optimizer.load_state_dict(checkpoint['optim_state'])
         scheduler.load_state_dict(checkpoint['scheduler_state'])
