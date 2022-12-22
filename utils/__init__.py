@@ -223,10 +223,10 @@ def mask_tokens(inputs, special_tokens_mask, tokenizer, mlm_probability=0.15):
 def load_checkpoint(model, optimizer, scheduler, args):
     checkpoint = torch.load(args.checkpoint_path)
 
-    args.start_epoch = checkpoint['epoch'] + 1
-
     model.load_state_dict(checkpoint['weights'], strict=False)
+
     if not args.restore_weights_only:
+        args.start_epoch = checkpoint['epoch'] + 1
         optimizer.load_state_dict(checkpoint['optim_state'])
         scheduler.load_state_dict(checkpoint['scheduler_state'])
         
