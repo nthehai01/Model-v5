@@ -289,14 +289,12 @@ if __name__ == '__main__':
         )
         model.to(args.device)
 
-        if len(args.layers_to_freeze) > 0:
-            print("Freezing {} layers...".format(len(args.layers_to_freeze)))
-            freeze_layers(model, args.layers_to_freeze)
-            print("="*50)
-
         wandb.watch(model, log_freq=10000, log_graph=True, log="all")
 
         print("Starting training...")
+        if len(args.layers_to_freeze) > 0:
+            freeze_layers(model, args.layers_to_freeze)
+            print("{} layers freezed.".format(len(args.layers_to_freeze)))
         train(model, train_loader, val_loader, args)
     finally:
         wandb.finish()
