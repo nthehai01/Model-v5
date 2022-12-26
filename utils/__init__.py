@@ -230,3 +230,9 @@ def load_checkpoint(model, optimizer, scheduler, args):
         optimizer.load_state_dict(checkpoint['optim_state'])
         scheduler.load_state_dict(checkpoint['scheduler_state'])
         
+
+def freeze_layers(model, layers_to_freeze):
+    for name, param in model.named_parameters():
+        if any([layer in name for layer in layers_to_freeze]):
+            param.requires_grad = False
+            

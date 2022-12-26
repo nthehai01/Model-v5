@@ -10,7 +10,7 @@ import numpy as np
 import warnings
 import gc
 
-from utils import load_checkpoint, make_folder, seed_everything
+from utils import load_checkpoint, freeze_layers, make_folder, seed_everything
 from datasets import get_dataloader
 from models.notebook_ordering import NotebookOrdering
 from utils.metrics import kendall_tau
@@ -208,9 +208,7 @@ def parse_args():
     parser.add_argument('--max_len', type=int, default=64)
     parser.add_argument('--ellipses_token_id', type=int, default=734)
 
-    parser.add_argument('--freeze_pretrained', action="store_true")
-    parser.add_argument('--no-freeze_pretrained', action="store_false", dest='freeze_pretrained')
-    parser.set_defaults(freeze_pretrained=True)
+    parser.add_argument('--layers_to_freeze', nargs='+', type=str, default=[])
 
     parser.add_argument('--preprocess_data', action="store_true")
     parser.add_argument('--no-preprocess_data', action="store_false", dest='preprocess_data')
@@ -291,14 +289,11 @@ if __name__ == '__main__':
         )
         model.to(args.device)
 
-        if args.freeze_pretrained:
-            print("Freezing pretrained models...")
-            for param in model.code_encoder.parameters():
-                param.requires_grad = False
-            for param in model.md_encoder.parameters():
-                param.requires_grad = False
+        if len(args.layers_to_freeze) > 0:
+            print("Freezing {} layers...".format(len(args.layers_to_freeze)))
+            freeze_layers(model, args.layers_to_freeze)
             print("="*50)
-            
+
         wandb.watch(model, log_freq=10000, log_graph=True, log="all")
 
         print("Starting training...")
