@@ -84,7 +84,7 @@ def remove_test_ids(df, test_ids_path):
     return df
 
 
-def remove_non_en_nb(df, non_en_ids_path):
+def remove_non_en_nbs(df, non_en_ids_path):
     """
     Filter out non-english notebooks.
     """
@@ -114,7 +114,7 @@ def preprocess(args):
 
     df = pd.concat(notebooks_train).reset_index()
     df = remove_test_ids(df, args.test_ids_path)
-    df = remove_non_en_nb(df, args.non_en_ids_path)
+    df = remove_non_en_nbs(df, args.non_en_ids_path)
 
     df['is_code'] = (df['cell_type'] == 'code').astype(np.int8)
     df['pos'] = df.groupby('id')['cell_id'].cumcount() + 1  # [1:TOTAL_MAX_CELLS]
