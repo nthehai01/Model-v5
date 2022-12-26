@@ -27,9 +27,6 @@ SEED = int(os.environ['SEED'])
 
 def train_one_epoch(model, 
                     train_loader, 
-                    val_loader, 
-                    val_df, 
-                    df_orders, 
                     reg_criterion, 
                     scaler, 
                     optimizer, 
@@ -167,9 +164,6 @@ def train(model, train_loader, val_loader, args):
         _ = train_one_epoch(
             model, 
             train_loader, 
-            val_loader,
-            val_df, 
-            df_orders, 
             reg_criterion, 
             scaler, 
             optimizer, 
