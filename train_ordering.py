@@ -4,6 +4,7 @@ import os
 import wandb
 import torch
 from transformers import AdamW, get_linear_schedule_with_warmup
+from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
 import pandas as pd
 from tqdm import tqdm
 import numpy as np
@@ -122,10 +123,21 @@ def train(model, train_loader, val_loader, args):
 
     num_train_optimization_steps = int(args.epochs * len(train_loader) / args.accumulation_steps)
     warmup_steps = len(train_loader) // args.accumulation_steps
-    optimizer = AdamW(optimizer_grouped_parameters, lr=args.lr,
-                      correct_bias=False)  # To reproduce BertAdam specific behavior set correct_bias=False
-    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=warmup_steps,
-                                                num_training_steps=num_train_optimization_steps)  # PyTorch scheduler
+    optimizer = AdamW(
+        optimizer_grouped_parameters, 
+        lr=args.lr,
+        correct_bias=False  # To reproduce BertAdam specific behavior set correct_bias=False
+    ) 
+    # scheduler = get_linear_schedule_with_warmup(
+    #     optimizer, 
+    #     num_warmup_steps=warmup_steps,
+    #     num_training_steps=num_train_optimization_steps
+    # )
+    scheduler = CosineAnnealingWarmRestarts(
+        optimizer,
+        T_0=num_train_optimization_steps + args.epochs + 1,
+        eta_min=args.lr / 5
+    )
     
     # loading checkpoint
     if args.checkpoint_path is not None:
