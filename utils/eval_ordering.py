@@ -7,11 +7,12 @@ from tqdm import tqdm
 import gc
 
 
-def get_raw_preds(model: nn.Module, loader: DataLoader, device, name):
+def get_raw_preds(model: nn.Module, loader: DataLoader, reg_criterion, device, name):
     model.eval()
     pbar = tqdm(loader, desc=name)    
     nb_ids = []
     point_preds = []
+    point_loss_list = []
     with torch.inference_mode():
         for batch in pbar:
             nb_ids.extend(batch['nb_id'])
@@ -33,13 +34,24 @@ def get_raw_preds(model: nn.Module, loader: DataLoader, device, name):
             indices = torch.where(batch['reg_masks'] == True)
             point_preds.extend(point_pred[indices].cpu().numpy().tolist())
 
+            reg_mask = batch['reg_masks'].float()
+            point_loss = reg_criterion(
+                point_pred*reg_mask, 
+                batch['point_pct_target']
+            ) * batch['n_md_cells']
+            point_loss = point_loss.sum() / (batch['n_md_cells']*reg_mask).sum()
+
+            point_loss_list.append(point_loss.item())
+        
+        assert len(point_loss_list) == len(nb_ids)
+
     # tidy up
     del point_pred
     gc.collect()
     if device == torch.device('cuda'):
         torch.cuda.empty_cache()
    
-    return nb_ids, point_preds
+    return nb_ids, point_preds, point_loss_list
 
 
 def get_point_preds(point_preds: np.array, df: pd.DataFrame):
@@ -60,8 +72,8 @@ def code_rank_correction(df):
     print('> Non-corrected %:', (df['pp_rank'] == df['pred_rank']).mean())
 
 
-def predict(model, loader, df, device, name):
-    _, preds = get_raw_preds(model, loader, device, name)
+def predict(model, loader, reg_criterion, df, device, name):
+    _, preds, val_loss_list = get_raw_preds(model, loader, reg_criterion, device, name)
     pred_series = get_point_preds(preds, df)
 
-    return pred_series
+    return pred_series, val_loss_list

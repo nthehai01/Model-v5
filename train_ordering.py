@@ -168,7 +168,8 @@ def train(model, train_loader, val_loader, args):
         squeeze=True,
     ).str.split()
 
-    pred_series = predict(model, val_loader, val_df, args.device, "Get baseline")
+    pred_series, val_loss_list = predict(model, val_loader, reg_criterion, val_df, args.device, "Get baseline")
+    print("> Avg baseline loss:", np.mean(val_loss_list))
     print('> Baseline score:', kendall_tau(df_orders.loc[pred_series.index], pred_series))
 
     # training
@@ -186,11 +187,12 @@ def train(model, train_loader, val_loader, args):
         )
 
         # validation
-        pred_series = predict(model, val_loader, val_df, args.device, "Validating")
+        pred_series, val_loss_list = predict(model, val_loader, reg_criterion, val_df, args.device, "Validating")
 
         metrics = {}
         metrics['score'] = kendall_tau(df_orders.loc[pred_series.index], pred_series)
         wandb.log(metrics)
+        print("> Avg val loss:", np.mean(val_loss_list))
         print("> Val score:", metrics['score'])
 
         if scheduler.get_last_lr()[0] == 0:
