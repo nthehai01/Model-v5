@@ -59,9 +59,9 @@ def preprocess_text(text):
 
     text = text.lower().strip()
 
-    # Remove all the special characters
-    text = re.sub(r'\W', ' ', str(text))
-    text = text.replace('_', ' ')
+    # # Remove all the special characters
+    # text = re.sub(r'\W', ' ', str(text))
+    # text = text.replace('_', ' ')
 
     # remove all single characters
     text = re.sub(r'\s+[a-zA-Z]\s+', ' ', text)
@@ -83,7 +83,7 @@ def preprocess_text(text):
 
     text = text.replace("[SEP]", "")
     text = text.replace("[CLS]", "")
-    text = re.sub(' +', ' ', text)
+    # text = re.sub(' +', ' ', text)
 
     return text
 
