@@ -109,13 +109,13 @@ def encode_texts(df_cell,
                  return_special_tokens_mask=False):
     if for_mlm:
         texts = (
-            df_cell['source'].tolist() + 
+            df_cell['source'].apply(preprocess_text).tolist() + 
             n_pads * ['padding' + tokenizer.sep_token]
         )  # len = max_n_cells + 2
     else:
         texts = (
             ['starting' + tokenizer.sep_token] +
-            df_cell['source'].tolist() + 
+            df_cell['source'].apply(preprocess_text).tolist() + 
             ['ending' + tokenizer.sep_token] +
             n_pads * ['padding' + tokenizer.sep_token]
         )  # len = max_n_cells + 2
