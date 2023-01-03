@@ -86,6 +86,13 @@ class OrderingDataset(Dataset):
         # pointwise target for md cells
         point_pct_target = torch.FloatTensor(nb_info["df_md_cell"]['pct_rank'].tolist() + \
                            nb_info["n_md_cell_pads"]*[0.])
+
+        # proportion of markdown cells
+        if nb_info["n_md_cells"] + nb_info["n_code_cells"] == 0:
+            md_pct = 0.
+        else:
+            md_pct = nb_info["n_md_cells"] / (nb_info["n_md_cells"] + nb_info["n_code_cells"])
+        md_pct = torch.FloatTensor([md_pct])
         
         return {
             'nb_id': nb_info["nb_id"],
@@ -97,7 +104,8 @@ class OrderingDataset(Dataset):
             'md_cell_padding_masks': md_cell_padding_masks,
             'n_md_cells': n_md_cells_torch,
             'reg_masks': reg_masks,
-            'point_pct_target': point_pct_target
+            'point_pct_target': point_pct_target,
+            'md_pct': md_pct
         }
 
 

@@ -51,7 +51,8 @@ def train_one_epoch(model,
                 batch['md_input_ids'],
                 batch['md_attention_masks'],
                 batch['code_cell_padding_masks'],
-                batch['md_cell_padding_masks']
+                batch['md_cell_padding_masks'],
+                batch['md_pct'],
             )
 
             reg_mask = batch['reg_masks'].float()

@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 from transformers import AutoConfig
 
@@ -7,15 +8,19 @@ from models import Linear, CellEncoder, Attention, PositionalEncoder
 class PointwiseHead(nn.Module):
     def __init__(self, dim):
         super(PointwiseHead, self).__init__()
-        self.fc0 = Linear(dim, 256)
+        self.fc0 = Linear(dim+1, 256)
         self.fc1 = Linear(256, 128)
         self.dropout = nn.Dropout(0.1)
         self.act = nn.LeakyReLU()
         self.top = Linear(128, 1)  
         
         
-    def forward(self, x):
+    def forward(self, x, md_pct):
         x = x[:, 1:-1]
+        x = torch.cat(
+            [x, md_pct.unsqueeze(-1).repeat(1, x.shape[1], 1)], 
+            dim=-1
+        )
 
         x = self.fc0(x)
         x = self.act(x)
@@ -57,7 +62,8 @@ class NotebookOrdering(nn.Module):
     def forward(self, 
                 code_input_ids, code_attention_masks, 
                 md_input_ids, md_attention_masks,
-                code_cell_padding_masks, md_cell_padding_masks):
+                code_cell_padding_masks, md_cell_padding_masks,
+                md_pct):
         # cell encoder
         code_embedding = self.code_encoder(code_input_ids, code_attention_masks)  # [..., max_code_cell+2, max_len, emb_dim]
         md_embedding = self.md_encoder(md_input_ids, md_attention_masks)  # [..., max_md_cell+2, max_len, emb_dim]
@@ -84,6 +90,6 @@ class NotebookOrdering(nn.Module):
         )  # [..., max_md_cell+2, emb_dim]
 
         # pointwise head
-        x = self.pointwise_head(md_cell_embedding)  # [..., max_md_cell]
+        x = self.pointwise_head(md_cell_embedding, md_pct)  # [..., max_md_cell]
 
         return x

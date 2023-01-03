@@ -28,7 +28,8 @@ def get_raw_preds(model: nn.Module, loader: DataLoader, reg_criterion, device, n
                     batch['md_input_ids'],
                     batch['md_attention_masks'],
                     batch['code_cell_padding_masks'],
-                    batch['md_cell_padding_masks']
+                    batch['md_cell_padding_masks'],
+                    batch['md_pct']
                 )
 
             indices = torch.where(batch['reg_masks'] == True)
