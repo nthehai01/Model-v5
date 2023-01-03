@@ -168,9 +168,9 @@ def train(model, train_loader, val_loader, args):
         squeeze=True,
     ).str.split()
 
-    pred_series, val_loss_list = predict(model, val_loader, reg_criterion, val_df, args.device, "Get baseline")
-    print("> Avg baseline loss:", np.mean(val_loss_list))
-    print('> Baseline score:', kendall_tau(df_orders.loc[pred_series.index], pred_series))
+    # pred_series, val_loss_list = predict(model, val_loader, reg_criterion, val_df, args.device, "Get baseline")
+    # print("> Avg baseline loss:", np.mean(val_loss_list))
+    # print('> Baseline score:', kendall_tau(df_orders.loc[pred_series.index], pred_series))
 
     # training
     for epoch in range(args.start_epoch, args.epochs+1):
