@@ -73,7 +73,7 @@ def train_one_epoch(model,
             optimizer.zero_grad()
             scheduler.step()
 
-        step = 5
+        step = 1
         if idx % step == 0:
             metrics = {}
             metrics['point_loss'] = np.round(np.mean(point_loss_list[-step:]), 4)
