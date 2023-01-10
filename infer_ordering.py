@@ -147,6 +147,7 @@ def parse_args():
     args.df_code_cell_path = args.proc_data_dir / "df_code_cell.pkl"
     args.df_md_cell_path = args.proc_data_dir / "df_md_cell.pkl"
     args.nb_meta_data_path = args.proc_data_dir / "nb_meta_data.json"
+    args.submission_dir = args.output_dir / "submission.csv"
     args.restore_weights_only = True
 
     args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -180,5 +181,5 @@ if __name__ == '__main__':
 
     pred_series = infer(model, test_loader, args)
 
-    pred_series.to_csv("submission.csv", index=False)
+    pred_series.to_csv(args.submission_dir, index=False)
     
