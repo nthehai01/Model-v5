@@ -13,7 +13,7 @@ from utils import load_checkpoint, make_folder, seed_everything
 from datasets import get_dataloader
 from models.notebook_mlm import NotebookMLM
 from datasets.preprocess import preprocess
-from utils.eval_mlm import eval
+from utils.eval_mlm import predict
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 warnings.filterwarnings("ignore")
@@ -129,7 +129,7 @@ def train(model, train_loader, val_loader, args):
     criterion = nn.CrossEntropyLoss(ignore_index=NON_MASKED_INDEX, reduction='mean')
 
     # # baseline
-    # base_loss_list = eval(model, val_loader, criterion, args.device, "Get baseline")
+    # base_loss_list = predict(model, val_loader, criterion, args.device, "Get baseline")
     # print("> Avg base loss:", np.mean(base_loss_list))
     
     # training
@@ -146,7 +146,7 @@ def train(model, train_loader, val_loader, args):
         )
 
         # # evaluate
-        # val_loss_list = eval(model, val_loader, criterion, args.device, "Validating")
+        # val_loss_list = predict(model, val_loader, criterion, args.device, "Validating")
         # print("> Avg val loss:", np.mean(val_loss_list))
 
         if scheduler.get_last_lr()[0] == 0:

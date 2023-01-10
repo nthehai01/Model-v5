@@ -7,7 +7,7 @@ from tqdm import tqdm
 import gc
 
 
-def get_raw_preds(model: nn.Module, loader: DataLoader, reg_criterion, device, name):
+def get_raw_preds(model: nn.Module, loader: DataLoader, reg_criterion, device, name, mode):
     model.eval()
     pbar = tqdm(loader, desc=name)    
     nb_ids = []
@@ -35,33 +35,36 @@ def get_raw_preds(model: nn.Module, loader: DataLoader, reg_criterion, device, n
             indices = torch.where(batch['reg_masks'] == True)
             point_preds.extend(point_pred[indices].cpu().numpy().tolist())
 
-            reg_mask = batch['reg_masks'].float()
-            point_loss = reg_criterion(
-                point_pred*reg_mask, 
-                batch['point_pct_target']
-            ) * batch['n_md_cells']
-            # point_loss = point_loss.sum() / (batch['n_md_cells']*reg_mask).sum()
-            point_loss = point_loss.mean()
+            if mode == "eval":
+                reg_mask = batch['reg_masks'].float()
+                point_loss = reg_criterion(
+                    point_pred*reg_mask, 
+                    batch['point_pct_target']
+                ) * batch['n_md_cells']
+                # point_loss = point_loss.sum() / (batch['n_md_cells']*reg_mask).sum()
+                point_loss = point_loss.mean()
 
-            point_loss_list.append(point_loss.item())
+                point_loss_list.append(point_loss.item())
         
-        assert len(point_loss_list) == len(nb_ids)
-
     # tidy up
     del point_pred
     gc.collect()
     if device == torch.device('cuda'):
         torch.cuda.empty_cache()
    
-    return nb_ids, point_preds, point_loss_list
+    return point_preds, point_loss_list
+    
 
-
-def get_point_preds(point_preds: np.array, df: pd.DataFrame):
+def get_point_preds(point_preds: np.array, df: pd.DataFrame, mode):
     df = df.reset_index()
     df.loc[df.cell_type == "markdown", 'rel_pos'] = point_preds
     df['pred_rank'] = df.groupby('id')['rel_pos'].rank()
     code_rank_correction(df)
-    return df.sort_values('pp_rank').groupby('id')['cell_id'].apply(list)
+
+    if mode == "eval":
+        return df.sort_values('pp_rank').groupby('id')['cell_id'].apply(list)
+    if mode == "test":
+        return df.sort_values('pp_rank').groupby('id')['cell_id'].apply(lambda x: " ".join(x)).reset_index()
 
 
 def code_rank_correction(df):
@@ -74,8 +77,10 @@ def code_rank_correction(df):
     print('> Non-corrected %:', (df['pp_rank'] == df['pred_rank']).mean())
 
 
-def predict(model, loader, reg_criterion, df, device, name):
-    _, preds, val_loss_list = get_raw_preds(model, loader, reg_criterion, device, name)
-    pred_series = get_point_preds(preds, df)
+def predict(model, loader, df, device, name, mode="test", reg_criterion=None):
+    assert mode in ["eval", "test"]
+
+    preds, val_loss_list = get_raw_preds(model, loader, reg_criterion, device, name, mode)
+    pred_series = get_point_preds(preds, df, mode)
 
     return pred_series, val_loss_list

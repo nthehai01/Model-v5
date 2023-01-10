@@ -3,7 +3,7 @@ from tqdm import tqdm
 import gc
 
 
-def eval(model, loader, criterion, device, name):
+def predict(model, loader, criterion, device, name):
     model.eval()
     pbar = tqdm(loader, desc=name)    
     nb_ids = []

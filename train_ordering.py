@@ -170,7 +170,15 @@ def train(model, train_loader, val_loader, args):
         squeeze=True,
     ).str.split()
 
-    pred_series, val_loss_list = predict(model, val_loader, reg_criterion, val_df, args.device, "Get baseline")
+    pred_series, val_loss_list = predict(
+        model, 
+        val_loader,  
+        val_df, 
+        args.device, 
+        name="Get baseline",
+        mode="eval", 
+        reg_criterion=reg_criterion
+    )
     print("> Avg baseline loss:", np.mean(val_loss_list))
     print('> Baseline score:', kendall_tau(df_orders.loc[pred_series.index], pred_series))
 
@@ -189,7 +197,15 @@ def train(model, train_loader, val_loader, args):
         )
 
         # validation
-        pred_series, val_loss_list = predict(model, val_loader, reg_criterion, val_df, args.device, "Validating")
+        pred_series, val_loss_list = predict(
+            model, 
+            val_loader, 
+            val_df, 
+            args.device, 
+            name="Validating",
+            mode="eval",
+            reg_criterion=reg_criterion
+        )
 
         metrics = {}
         metrics['score'] = kendall_tau(df_orders.loc[pred_series.index], pred_series)
@@ -262,7 +278,7 @@ def parse_args():
     args.nb_meta_data_path = args.proc_data_dir / "nb_meta_data.json"
 
     args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
+
     return args
 
 

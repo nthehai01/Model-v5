@@ -7,6 +7,7 @@ export PICKLE_PROTOCOL=4
 export NON_MASKED_INDEX=-100
 export MAX_GRADIENT=10.0
 export MLM_PROBABILITY=0.15
+export PICKLE_PROTOCOL=4
 
 
 clearenv () {
@@ -17,4 +18,5 @@ clearenv () {
     unset NON_MASKED_INDEX
     unset MAX_GRADIENT
     unset MLM_PROBABILITY
+    unset PICKLE_PROTOCOL
 }

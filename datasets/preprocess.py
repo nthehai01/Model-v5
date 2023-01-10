@@ -5,10 +5,11 @@ import pandas as pd
 import numpy as np
 import json
 from sklearn.model_selection import GroupShuffleSplit
+import os
 
 
 SEED = 42
-PICKLE_PROTOCOL = 4
+PICKLE_PROTOCOL = int(os.environ['PICKLE_PROTOCOL'])
 
 
 def read_nb(path):
