@@ -82,7 +82,8 @@ def dataset_preprocess(args):
     nb_meta_data = obtain_nb_info(df_merge, args.raw_data_dir)
 
     test_ids = df_merge.id.unique()
-    test_ids = pd.Series(test_ids)
+    sorted_ids = np.sort(test_ids)
+    test_ids = pd.Series(sorted_ids)
 
     test_ids.to_pickle(args.test_ids_path, protocol=PICKLE_PROTOCOL)
     df_merge[df_merge.cell_type == 'code'].to_pickle(args.df_code_cell_path, protocol=PICKLE_PROTOCOL)
@@ -106,8 +107,6 @@ def infer(model, test_loader, args):
     df_md_cell = pd.read_pickle(args.df_md_cell_path).set_index('id')
     df_cell = df_code_cell.append(df_md_cell)
     test_df = df_cell.loc[test_ids.tolist()]
-    sorted_ids = np.sort(test_df.index.unique())
-    test_df = test_df.loc[sorted_ids]
 
     pred_series, _ = predict(
         model, 
