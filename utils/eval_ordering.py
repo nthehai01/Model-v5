@@ -64,7 +64,9 @@ def get_point_preds(point_preds: np.array, df: pd.DataFrame, mode):
     if mode == "eval":
         return df.sort_values('pp_rank').groupby('id')['cell_id'].apply(list)
     if mode == "test":
-        return df.sort_values('pp_rank').groupby('id')['cell_id'].apply(lambda x: " ".join(x)).reset_index()
+        res = df.sort_values('pp_rank').groupby('id')['cell_id'].apply(lambda x: " ".join(x)).reset_index()
+        res.rename(columns={"cell_id": "cell_order"}, inplace=True)
+        return res
 
 
 def code_rank_correction(df):
