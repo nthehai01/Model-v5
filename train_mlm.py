@@ -190,6 +190,9 @@ def parse_args():
     parser.add_argument('--n_epochs_per_save', type=int, default=100)  # REMOVE IF SUBMITTING
 
     parser.add_argument('--checkpoint_path', type=str, default=None)
+    parser.add_argument('--restore_weights_only', action="store_true")
+    parser.add_argument('--no-restore_weights_only', action="store_false", dest='restore_weights_only')
+    parser.set_defaults(restore_weights_only=True)
 
     parser.add_argument('--output_dir', type=str, default="/Users/hainguyen/Documents/outputs")
 
@@ -205,8 +208,6 @@ def parse_args():
     args.df_code_cell_path = args.proc_data_dir / "df_code_cell.pkl"
     args.df_md_cell_path = args.proc_data_dir / "df_md_cell.pkl"
     args.nb_meta_data_path = args.proc_data_dir / "nb_meta_data.json"
-
-    args.restore_weights_only = False
 
     args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
