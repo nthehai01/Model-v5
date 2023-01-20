@@ -3,7 +3,7 @@ import torch.nn as nn
 from transformers import AutoConfig
 import os
 
-from models import Linear, CellEncoder
+from models import Linear, CellEncoder, MLMPositionalEncoder
 
 
 NON_MASKED_INDEX = int(os.environ['NON_MASKED_INDEX'])
@@ -23,6 +23,7 @@ class NotebookMLM(nn.Module):
 
         self.code_encoder = CellEncoder(code_pretrained)
         self.md_encoder = CellEncoder(md_pretrained)
+        self.code_positional_encoder = MLMPositionalEncoder()
         self.code_cell_encoder = nn.TransformerEncoder(
             nn.TransformerEncoderLayer(d_model=code_emb_dim, nhead=n_heads, batch_first=True), 
             num_layers=n_layers
@@ -41,6 +42,9 @@ class NotebookMLM(nn.Module):
         # cell encoder
         code_embedding = self.code_encoder(code_input_ids, code_attention_masks)  # [..., max_code_cell, max_len, emb_dim]
         md_embedding = self.md_encoder(md_input_ids, md_attention_masks)  # [..., max_md_cell, max_len, emb_dim]
+
+        # add positional encoder
+        code_embedding = self.code_positional_encoder(code_embedding)  # [..., max_code_cell, max_len, emb_dim]
 
         # reshape
         batch_size = code_embedding.shape[0]

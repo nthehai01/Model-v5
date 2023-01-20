@@ -77,4 +77,23 @@ class PositionalEncoder(nn.Module):
 
         x += pos_encoding[:, :max_cell, :].to(x.device)
         x = self.dropout(x)
+        
+        return x
+
+
+class MLMPositionalEncoder(PositionalEncoder):
+    def __init__(self):
+        PositionalEncoder.__init__(self)
+
+
+    def forward(self, x):
+        _, max_cell, max_len, emb_dim = x.shape
+
+        pos_encoding = self._generate_positional_encoding(max_cell, emb_dim)
+        mlm_pos_encoding = pos_encoding.unsqueeze(2)
+        mlm_pos_encoding = mlm_pos_encoding.repeat(1, 1, max_len, 1)
+
+        x += mlm_pos_encoding[:, :max_cell, :, :].to(x.device)
+        x = self.dropout(x)
+
         return x
