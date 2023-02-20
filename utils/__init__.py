@@ -111,7 +111,7 @@ def encode_texts(df_cell,
         texts = (
             df_cell['source'].apply(preprocess_text).tolist() + 
             n_pads * ['padding' + tokenizer.sep_token]
-        )  # len = max_n_cells + 2
+        )  # len = max_n_cells
     else:
         texts = (
             ['starting' + tokenizer.sep_token] +
